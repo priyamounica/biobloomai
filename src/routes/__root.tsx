@@ -71,13 +71,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Verdant — AI health companion for labs & meds" },
+      { title: "Unified AI-Powered Health Platform For Living Systems" },
       {
         name: "description",
         content:
           "Track lab results and medications, get AI-powered plain-language summaries. Private, no signup required.",
       },
-      { property: "og:title", content: "Verdant — AI health companion" },
+      { property: "og:title", content: "Unified AI-Powered Health Platform For Living Systems" },
       {
         property: "og:description",
         content:
@@ -85,6 +85,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Unified AI-Powered Health Platform For Living Systems" },
+      { name: "description", content: "Health Companion AI is a secure, AI-powered web app for personalized health insights and management." },
+      { property: "og:description", content: "Health Companion AI is a secure, AI-powered web app for personalized health insights and management." },
+      { name: "twitter:description", content: "Health Companion AI is a secure, AI-powered web app for personalized health insights and management." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
