@@ -119,8 +119,24 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
               placeholder="Start typing… e.g. metformin"
               autoFocus
             />
-            {(suggestions.length > 0 || loadingSugg) && (
+            {!suggestionsDismissed && (suggestions.length > 0 || loadingSugg) && (
               <div className="absolute z-20 mt-1 left-0 right-0 rounded-xl border border-border bg-popover shadow-card overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/60 bg-sage/30">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    AI suggestions
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSuggestions([]);
+                      setSuggestionsDismissed(true);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                    aria-label="Dismiss suggestions"
+                  >
+                    <X className="h-3 w-3" /> Dismiss
+                  </button>
+                </div>
                 {loadingSugg && (
                   <div className="px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
                     <Loader2 className="h-3 w-3 animate-spin" /> AI suggesting…
@@ -131,8 +147,10 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
                     key={s}
                     type="button"
                     onClick={() => {
+                      lastPickedRef.current = s;
                       setDraft((d) => ({ ...d, name: s }));
                       setSuggestions([]);
+                      setSuggestionsDismissed(true);
                     }}
                     className="block w-full text-left px-3 py-2 text-sm hover:bg-sage/60"
                   >
