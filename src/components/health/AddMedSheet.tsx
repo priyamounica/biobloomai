@@ -84,6 +84,8 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
     toast.success(`${draft.name} added.`);
     setDraft(empty());
     setSuggestions([]);
+    setSuggestionsDismissed(false);
+    lastPickedRef.current = "";
     onOpenChange(false);
   };
 
@@ -94,6 +96,8 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
         if (!v) {
           setDraft(empty());
           setSuggestions([]);
+          setSuggestionsDismissed(false);
+          lastPickedRef.current = "";
         }
         onOpenChange(v);
       }}
