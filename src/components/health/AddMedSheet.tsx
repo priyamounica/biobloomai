@@ -34,21 +34,28 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
   const [draft, setDraft] = useState<Draft>(empty());
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingSugg, setLoadingSugg] = useState(false);
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
+  const lastPickedRef = useRef<string>("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suggest = useServerFn(suggestMeds);
   const addMed = useHealthStore((s) => s.addMed);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (draft.name.trim().length < 2) {
+    const name = draft.name.trim();
+    if (
+      suggestionsDismissed ||
+      name.length < 2 ||
+      name.toLowerCase() === lastPickedRef.current.toLowerCase()
+    ) {
       setSuggestions([]);
       return;
     }
     debounceRef.current = setTimeout(async () => {
       setLoadingSugg(true);
       try {
-        const r = await suggest({ data: { query: draft.name.trim() } });
-        setSuggestions(r.suggestions.filter((s) => s.toLowerCase() !== draft.name.toLowerCase()));
+        const r = await suggest({ data: { query: name } });
+        setSuggestions(r.suggestions.filter((s) => s.toLowerCase() !== name.toLowerCase()));
       } catch {
         /* silent */
       } finally {
@@ -58,7 +65,7 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [draft.name, suggest]);
+  }, [draft.name, suggest, suggestionsDismissed]);
 
   const toggleTime = (t: string) =>
     setDraft((d) => ({
