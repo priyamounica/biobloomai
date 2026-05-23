@@ -34,21 +34,28 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
   const [draft, setDraft] = useState<Draft>(empty());
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingSugg, setLoadingSugg] = useState(false);
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
+  const lastPickedRef = useRef<string>("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suggest = useServerFn(suggestMeds);
   const addMed = useHealthStore((s) => s.addMed);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (draft.name.trim().length < 2) {
+    const name = draft.name.trim();
+    if (
+      suggestionsDismissed ||
+      name.length < 2 ||
+      name.toLowerCase() === lastPickedRef.current.toLowerCase()
+    ) {
       setSuggestions([]);
       return;
     }
     debounceRef.current = setTimeout(async () => {
       setLoadingSugg(true);
       try {
-        const r = await suggest({ data: { query: draft.name.trim() } });
-        setSuggestions(r.suggestions.filter((s) => s.toLowerCase() !== draft.name.toLowerCase()));
+        const r = await suggest({ data: { query: name } });
+        setSuggestions(r.suggestions.filter((s) => s.toLowerCase() !== name.toLowerCase()));
       } catch {
         /* silent */
       } finally {
@@ -58,7 +65,7 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [draft.name, suggest]);
+  }, [draft.name, suggest, suggestionsDismissed]);
 
   const toggleTime = (t: string) =>
     setDraft((d) => ({
@@ -77,6 +84,8 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
     toast.success(`${draft.name} added.`);
     setDraft(empty());
     setSuggestions([]);
+    setSuggestionsDismissed(false);
+    lastPickedRef.current = "";
     onOpenChange(false);
   };
 
@@ -87,6 +96,8 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
         if (!v) {
           setDraft(empty());
           setSuggestions([]);
+          setSuggestionsDismissed(false);
+          lastPickedRef.current = "";
         }
         onOpenChange(v);
       }}
@@ -104,12 +115,36 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
             <Label className="text-xs">Name</Label>
             <Input
               value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              onChange={(e) => {
+                const v = e.target.value;
+                // If user keeps typing after dismissing/picking, allow new suggestions
+                if (v.trim().toLowerCase() !== lastPickedRef.current.toLowerCase()) {
+                  if (suggestionsDismissed) setSuggestionsDismissed(false);
+                  lastPickedRef.current = "";
+                }
+                setDraft({ ...draft, name: v });
+              }}
               placeholder="Start typing… e.g. metformin"
               autoFocus
             />
-            {(suggestions.length > 0 || loadingSugg) && (
+            {!suggestionsDismissed && (suggestions.length > 0 || loadingSugg) && (
               <div className="absolute z-20 mt-1 left-0 right-0 rounded-xl border border-border bg-popover shadow-card overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/60 bg-sage/30">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    AI suggestions
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSuggestions([]);
+                      setSuggestionsDismissed(true);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                    aria-label="Dismiss suggestions"
+                  >
+                    <X className="h-3 w-3" /> Dismiss
+                  </button>
+                </div>
                 {loadingSugg && (
                   <div className="px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
                     <Loader2 className="h-3 w-3 animate-spin" /> AI suggesting…
@@ -120,8 +155,10 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
                     key={s}
                     type="button"
                     onClick={() => {
+                      lastPickedRef.current = s;
                       setDraft((d) => ({ ...d, name: s }));
                       setSuggestions([]);
+                      setSuggestionsDismissed(true);
                     }}
                     className="block w-full text-left px-3 py-2 text-sm hover:bg-sage/60"
                   >

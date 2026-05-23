@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Leaf, Loader2, UserPlus } from "lucide-react";
+import { Leaf, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,20 +9,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/signup")({
-  component: Signup,
+export const Route = createFileRoute("/login")({
+  component: Login,
   head: () => ({
     meta: [
-      { title: "Create account — Verdant" },
-      { name: "description", content: "Create a free Verdant account to save your labs and medications." },
+      { title: "Sign in — Verdant" },
+      { name: "description", content: "Sign in to Verdant to save your labs and medications." },
     ],
   }),
 });
 
-function Signup() {
+function Login() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,7 +30,7 @@ function Signup() {
     if (!loading && user) navigate({ to: "/labs" });
   }, [user, loading, navigate]);
 
-  const signUpGoogle = async () => {
+  const signInGoogle = async () => {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
@@ -45,32 +44,21 @@ function Signup() {
     navigate({ to: "/labs" });
   };
 
-  const signUpEmail = async (e: React.FormEvent) => {
+  const signInEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error("Enter your email and password.");
       return;
     }
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
-      return;
-    }
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/labs`,
-        data: { full_name: name || undefined },
-      },
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success("Account created! Check your email to confirm.");
-    navigate({ to: "/login" });
+    toast.success("Welcome back.");
+    navigate({ to: "/labs" });
   };
 
   return (
@@ -79,9 +67,9 @@ function Signup() {
         <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
           <Leaf className="h-5 w-5" />
         </span>
-        <h1 className="font-serif text-4xl mt-5">Create your account</h1>
+        <h1 className="font-serif text-4xl mt-5">Welcome back</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Save your data securely and unlock smarter AI insights.
+          Sign in to sync your labs and medications.
         </p>
       </div>
 
@@ -90,7 +78,7 @@ function Signup() {
           type="button"
           variant="outline"
           className="w-full h-11 rounded-xl"
-          onClick={signUpGoogle}
+          onClick={signInGoogle}
           disabled={busy}
         >
           <GoogleIcon /> Continue with Google
@@ -102,16 +90,7 @@ function Signup() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <form onSubmit={signUpEmail} className="space-y-3">
-          <div>
-            <Label className="text-xs">Name (optional)</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              autoComplete="name"
-            />
-          </div>
+        <form onSubmit={signInEmail} className="space-y-3">
           <div>
             <Label className="text-xs">Email</Label>
             <Input
@@ -128,25 +107,20 @@ function Signup() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
-              autoComplete="new-password"
+              placeholder="••••••••"
+              autoComplete="current-password"
             />
           </div>
           <Button type="submit" className="w-full h-11 rounded-xl" disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-            Create account
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            Sign in
           </Button>
         </form>
 
-        <p className="text-center text-xs text-muted-foreground pt-3">
-          By continuing you agree to our terms. We never sell your data or use it
-          to train AI models.
-        </p>
-
-        <p className="text-center text-sm text-muted-foreground pt-1">
-          Already have an account?{" "}
-          <Link to="/login" className="text-foreground underline underline-offset-4">
-            Sign in
+        <p className="text-center text-sm text-muted-foreground pt-2">
+          New to Verdant?{" "}
+          <Link to="/signup" className="text-foreground underline underline-offset-4">
+            Create an account
           </Link>
         </p>
       </div>

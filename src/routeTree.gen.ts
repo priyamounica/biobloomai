@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as MedsRouteImport } from './routes/meds'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LabsRouteImport } from './routes/labs'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -22,6 +23,11 @@ const SignupRoute = SignupRouteImport.update({
 const MedsRoute = MedsRouteImport.update({
   id: '/meds',
   path: '/meds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabsRoute = LabsRouteImport.update({
@@ -38,12 +44,14 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/labs': typeof LabsRoute
+  '/login': typeof LoginRoute
   '/meds': typeof MedsRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/labs': typeof LabsRoute
+  '/login': typeof LoginRoute
   '/meds': typeof MedsRoute
   '/signup': typeof SignupRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/labs': typeof LabsRoute
+  '/login': typeof LoginRoute
   '/meds': typeof MedsRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/labs' | '/meds' | '/signup'
+  fullPaths: '/' | '/labs' | '/login' | '/meds' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/labs' | '/meds' | '/signup'
-  id: '__root__' | '/' | '/labs' | '/meds' | '/signup'
+  to: '/' | '/labs' | '/login' | '/meds' | '/signup'
+  id: '__root__' | '/' | '/labs' | '/login' | '/meds' | '/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LabsRoute: typeof LabsRoute
+  LoginRoute: typeof LoginRoute
   MedsRoute: typeof MedsRoute
   SignupRoute: typeof SignupRoute
 }
@@ -83,6 +93,13 @@ declare module '@tanstack/react-router' {
       path: '/meds'
       fullPath: '/meds'
       preLoaderRoute: typeof MedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/labs': {
@@ -105,6 +122,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LabsRoute: LabsRoute,
+  LoginRoute: LoginRoute,
   MedsRoute: MedsRoute,
   SignupRoute: SignupRoute,
 }
