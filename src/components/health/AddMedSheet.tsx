@@ -115,7 +115,15 @@ export function AddMedSheet({ open, onOpenChange }: { open: boolean; onOpenChang
             <Label className="text-xs">Name</Label>
             <Input
               value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              onChange={(e) => {
+                const v = e.target.value;
+                // If user keeps typing after dismissing/picking, allow new suggestions
+                if (v.trim().toLowerCase() !== lastPickedRef.current.toLowerCase()) {
+                  if (suggestionsDismissed) setSuggestionsDismissed(false);
+                  lastPickedRef.current = "";
+                }
+                setDraft({ ...draft, name: v });
+              }}
               placeholder="Start typing… e.g. metformin"
               autoFocus
             />
