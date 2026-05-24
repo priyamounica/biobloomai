@@ -113,20 +113,23 @@ export const summarizeLabs = createServerFn({ method: "POST" })
       .map((l) => `- ${l.date} — ${l.name}: ${l.value} ${l.unit ?? ""} ${l.refRange ? `(ref ${l.refRange})` : ""}`)
       .join("\n");
 
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a careful, plain-language health information assistant. Summarize lab results for a layperson. Use markdown with short sections: **Overview**, **What looks good**, **What to watch**, **Possible next steps**. Be cautious, never diagnose. Keep under 220 words.",
-        },
-        {
-          role: "user",
-          content: `Profile: ${profileLine(data.profile)}\n\nLab results:\n${labList}`,
-        },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a careful, plain-language health information assistant. Summarize lab results for a layperson. Use markdown with short sections: **Overview**, **What looks good**, **What to watch**, **Possible next steps**. Be cautious, never diagnose. Keep under 220 words.",
+          },
+          {
+            role: "user",
+            content: `Profile: ${profileLine(data.profile)}\n\nLab results:\n${labList}`,
+          },
+        ],
+      },
+      { kind: "summarize_labs", input: labList },
+    );
     const text = json.choices?.[0]?.message?.content ?? "No summary generated.";
     return { text: text + DISCLAIMER };
   });
