@@ -28,6 +28,15 @@ export function AppShell() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const getStatus = useServerFn(getMyAdminStatus);
+
+  const { data: adminStatus } = useQuery({
+    queryKey: ["admin-status"],
+    queryFn: () => getStatus(),
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+  const isAdmin = !!adminStatus?.isAdmin;
 
   // Invalidate caches on auth changes
   useEffect(() => {
