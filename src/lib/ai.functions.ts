@@ -279,17 +279,16 @@ export const parseLabFile = createServerFn({ method: "POST" })
     void isPdf;
     let json;
     try {
-      json = await callAI({
-        model: VISION_MODEL,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a precise medical document parser. Output strictly valid JSON, no commentary.",
-          },
-          { role: "user", content: userContent },
-        ],
-      });
+      json = await callAI(
+        {
+          model: VISION_MODEL,
+          messages: [
+            { role: "system", content: "You are a precise medical document parser. Output strictly valid JSON, no commentary." },
+            { role: "user", content: userContent },
+          ],
+        },
+        { kind: "parse_lab_file", input: `mime:${data.mimeType}` },
+      );
     } catch (e) {
       return { results: [], error: e instanceof Error ? e.message : "Parse failed" };
     }
