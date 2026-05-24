@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { logAi } from "./ai-log.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const TEXT_MODEL = "google/gemini-3-flash-preview";
@@ -8,25 +9,52 @@ const VISION_MODEL = "google/gemini-2.5-flash";
 const DISCLAIMER =
   "\n\n---\n*For informational purposes only. Please consult a healthcare professional. Your data is not used to train AI models.*";
 
-async function callAI(body: Record<string, unknown>) {
+async function callAI(
+  body: Record<string, unknown>,
+  log: { kind: string; input: string },
+) {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("AI service not configured");
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  if (res.status === 429) throw new Error("AI is busy — please try again in a moment.");
-  if (res.status === 402) throw new Error("AI credits exhausted. Please add credits in Settings → Workspace → Usage.");
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error("AI error:", res.status, txt);
-    throw new Error("AI service error. Please try again.");
+  const model = String(body.model ?? "");
+  const started = Date.now();
+  try {
+    const res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 429) throw new Error("AI is busy — please try again in a moment.");
+    if (res.status === 402)
+      throw new Error("AI credits exhausted. Please add credits in Settings → Workspace → Usage.");
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error("AI error:", res.status, txt);
+      throw new Error("AI service error. Please try again.");
+    }
+    const json = await res.json();
+    const output: string = json.choices?.[0]?.message?.content ?? "";
+    await logAi({
+      kind: log.kind,
+      model,
+      input: log.input,
+      output,
+      status: "ok",
+      tokensIn: json.usage?.prompt_tokens,
+      tokensOut: json.usage?.completion_tokens,
+      durationMs: Date.now() - started,
+    });
+    return json;
+  } catch (e) {
+    await logAi({
+      kind: log.kind,
+      model,
+      input: log.input,
+      status: "error",
+      error: e instanceof Error ? e.message : String(e),
+      durationMs: Date.now() - started,
+    });
+    throw e;
   }
-  return res.json();
 }
 
 const labSchema = z.object({
