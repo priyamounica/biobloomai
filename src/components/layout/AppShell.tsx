@@ -102,6 +102,11 @@ export function AppShell() {
                     <div className="truncate text-sm">{user.email}</div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin"><Shield className="h-4 w-4" /> Admin portal</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onSelect={() => signOut()}>
                     <LogOut className="h-4 w-4" /> Sign out
                   </DropdownMenuItem>
