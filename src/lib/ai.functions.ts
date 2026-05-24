@@ -210,20 +210,16 @@ export const adviseMeds = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const medList = data.meds.map((m) => `- ${m.name}${m.dosage ? ` ${m.dosage}` : ""}`).join("\n") || "(none)";
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Suggest lifestyle and supplement considerations relevant to the user's medications and profile. Use markdown: brief intro, then a bullet list of `**Suggestion** — one-line rationale`. Max 6 items. Always say to discuss with a pharmacist or clinician.",
-        },
-        {
-          role: "user",
-          content: `Profile: ${profileLine(data.profile)}\n\nMedications:\n${medList}`,
-        },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          { role: "system", content: "Suggest lifestyle and supplement considerations relevant to the user's medications and profile. Use markdown: brief intro, then a bullet list of `**Suggestion** — one-line rationale`. Max 6 items. Always say to discuss with a pharmacist or clinician." },
+          { role: "user", content: `Profile: ${profileLine(data.profile)}\n\nMedications:\n${medList}` },
+        ],
+      },
+      { kind: "advise_meds", input: medList },
+    );
     const text = json.choices?.[0]?.message?.content ?? "No advice generated.";
     return { text: text + DISCLAIMER };
   });
