@@ -146,20 +146,23 @@ export const adviseLabs = createServerFn({ method: "POST" })
     const labList = data.labs
       .map((l) => `- ${l.date} — ${l.name}: ${l.value} ${l.unit ?? ""}`)
       .join("\n") || "(none)";
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You recommend relevant follow-up lab tests based on existing results and profile. Use markdown: a short intro, then a bullet list of `**Test name** — one-line reason`. Max 6 tests. Be cautious, suggest discussing with a clinician.",
-        },
-        {
-          role: "user",
-          content: `Profile: ${profileLine(data.profile)}\n\nExisting labs:\n${labList}`,
-        },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You recommend relevant follow-up lab tests based on existing results and profile. Use markdown: a short intro, then a bullet list of `**Test name** — one-line reason`. Max 6 tests. Be cautious, suggest discussing with a clinician.",
+          },
+          {
+            role: "user",
+            content: `Profile: ${profileLine(data.profile)}\n\nExisting labs:\n${labList}`,
+          },
+        ],
+      },
+      { kind: "advise_labs", input: labList },
+    );
     const text = json.choices?.[0]?.message?.content ?? "No advice generated.";
     return { text: text + DISCLAIMER };
   });
