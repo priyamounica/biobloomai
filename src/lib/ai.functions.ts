@@ -186,20 +186,16 @@ export const summarizeMeds = createServerFn({ method: "POST" })
       )
       .join("\n");
 
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Summarize a medication list for a layperson. Use markdown sections: **Active medications**, **Possible interactions to ask about**, **Adherence tips**. Mention any common supplement/food interactions. Be cautious, never prescribe. Keep under 220 words.",
-        },
-        {
-          role: "user",
-          content: `Profile: ${profileLine(data.profile)}\n\nMedications:\n${medList}`,
-        },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          { role: "system", content: "Summarize a medication list for a layperson. Use markdown sections: **Active medications**, **Possible interactions to ask about**, **Adherence tips**. Mention any common supplement/food interactions. Be cautious, never prescribe. Keep under 220 words." },
+          { role: "user", content: `Profile: ${profileLine(data.profile)}\n\nMedications:\n${medList}` },
+        ],
+      },
+      { kind: "summarize_meds", input: medList },
+    );
     const text = json.choices?.[0]?.message?.content ?? "No summary generated.";
     return { text: text + DISCLAIMER };
   });
