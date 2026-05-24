@@ -1,10 +1,12 @@
 import { Link, Outlet, useLocation, useRouter } from "@tanstack/react-router";
-import { Leaf, LogOut, User as UserIcon } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Leaf, LogOut, Shield, User as UserIcon } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, signOut } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyAdminStatus } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
