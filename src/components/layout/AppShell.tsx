@@ -1,10 +1,12 @@
 import { Link, Outlet, useLocation, useRouter } from "@tanstack/react-router";
-import { Leaf, LogOut, User as UserIcon } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Leaf, LogOut, Shield, User as UserIcon } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth, signOut } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyAdminStatus } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +28,15 @@ export function AppShell() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const getStatus = useServerFn(getMyAdminStatus);
+
+  const { data: adminStatus } = useQuery({
+    queryKey: ["admin-status"],
+    queryFn: () => getStatus(),
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+  const isAdmin = !!adminStatus?.isAdmin;
 
   // Invalidate caches on auth changes
   useEffect(() => {
@@ -91,6 +102,11 @@ export function AppShell() {
                     <div className="truncate text-sm">{user.email}</div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin"><Shield className="h-4 w-4" /> Admin portal</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onSelect={() => signOut()}>
                     <LogOut className="h-4 w-4" /> Sign out
                   </DropdownMenuItem>

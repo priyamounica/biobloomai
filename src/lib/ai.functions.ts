@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { logAi } from "./ai-log.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const TEXT_MODEL = "google/gemini-3-flash-preview";
@@ -8,25 +9,52 @@ const VISION_MODEL = "google/gemini-2.5-flash";
 const DISCLAIMER =
   "\n\n---\n*For informational purposes only. Please consult a healthcare professional. Your data is not used to train AI models.*";
 
-async function callAI(body: Record<string, unknown>) {
+async function callAI(
+  body: Record<string, unknown>,
+  log: { kind: string; input: string },
+) {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("AI service not configured");
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  if (res.status === 429) throw new Error("AI is busy — please try again in a moment.");
-  if (res.status === 402) throw new Error("AI credits exhausted. Please add credits in Settings → Workspace → Usage.");
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error("AI error:", res.status, txt);
-    throw new Error("AI service error. Please try again.");
+  const model = String(body.model ?? "");
+  const started = Date.now();
+  try {
+    const res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 429) throw new Error("AI is busy — please try again in a moment.");
+    if (res.status === 402)
+      throw new Error("AI credits exhausted. Please add credits in Settings → Workspace → Usage.");
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error("AI error:", res.status, txt);
+      throw new Error("AI service error. Please try again.");
+    }
+    const json = await res.json();
+    const output: string = json.choices?.[0]?.message?.content ?? "";
+    await logAi({
+      kind: log.kind,
+      model,
+      input: log.input,
+      output,
+      status: "ok",
+      tokensIn: json.usage?.prompt_tokens,
+      tokensOut: json.usage?.completion_tokens,
+      durationMs: Date.now() - started,
+    });
+    return json;
+  } catch (e) {
+    await logAi({
+      kind: log.kind,
+      model,
+      input: log.input,
+      status: "error",
+      error: e instanceof Error ? e.message : String(e),
+      durationMs: Date.now() - started,
+    });
+    throw e;
   }
-  return res.json();
 }
 
 const labSchema = z.object({
@@ -85,20 +113,23 @@ export const summarizeLabs = createServerFn({ method: "POST" })
       .map((l) => `- ${l.date} — ${l.name}: ${l.value} ${l.unit ?? ""} ${l.refRange ? `(ref ${l.refRange})` : ""}`)
       .join("\n");
 
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a careful, plain-language health information assistant. Summarize lab results for a layperson. Use markdown with short sections: **Overview**, **What looks good**, **What to watch**, **Possible next steps**. Be cautious, never diagnose. Keep under 220 words.",
-        },
-        {
-          role: "user",
-          content: `Profile: ${profileLine(data.profile)}\n\nLab results:\n${labList}`,
-        },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a careful, plain-language health information assistant. Summarize lab results for a layperson. Use markdown with short sections: **Overview**, **What looks good**, **What to watch**, **Possible next steps**. Be cautious, never diagnose. Keep under 220 words.",
+          },
+          {
+            role: "user",
+            content: `Profile: ${profileLine(data.profile)}\n\nLab results:\n${labList}`,
+          },
+        ],
+      },
+      { kind: "summarize_labs", input: labList },
+    );
     const text = json.choices?.[0]?.message?.content ?? "No summary generated.";
     return { text: text + DISCLAIMER };
   });
@@ -115,20 +146,23 @@ export const adviseLabs = createServerFn({ method: "POST" })
     const labList = data.labs
       .map((l) => `- ${l.date} — ${l.name}: ${l.value} ${l.unit ?? ""}`)
       .join("\n") || "(none)";
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You recommend relevant follow-up lab tests based on existing results and profile. Use markdown: a short intro, then a bullet list of `**Test name** — one-line reason`. Max 6 tests. Be cautious, suggest discussing with a clinician.",
-        },
-        {
-          role: "user",
-          content: `Profile: ${profileLine(data.profile)}\n\nExisting labs:\n${labList}`,
-        },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You recommend relevant follow-up lab tests based on existing results and profile. Use markdown: a short intro, then a bullet list of `**Test name** — one-line reason`. Max 6 tests. Be cautious, suggest discussing with a clinician.",
+          },
+          {
+            role: "user",
+            content: `Profile: ${profileLine(data.profile)}\n\nExisting labs:\n${labList}`,
+          },
+        ],
+      },
+      { kind: "advise_labs", input: labList },
+    );
     const text = json.choices?.[0]?.message?.content ?? "No advice generated.";
     return { text: text + DISCLAIMER };
   });
@@ -152,20 +186,16 @@ export const summarizeMeds = createServerFn({ method: "POST" })
       )
       .join("\n");
 
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Summarize a medication list for a layperson. Use markdown sections: **Active medications**, **Possible interactions to ask about**, **Adherence tips**. Mention any common supplement/food interactions. Be cautious, never prescribe. Keep under 220 words.",
-        },
-        {
-          role: "user",
-          content: `Profile: ${profileLine(data.profile)}\n\nMedications:\n${medList}`,
-        },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          { role: "system", content: "Summarize a medication list for a layperson. Use markdown sections: **Active medications**, **Possible interactions to ask about**, **Adherence tips**. Mention any common supplement/food interactions. Be cautious, never prescribe. Keep under 220 words." },
+          { role: "user", content: `Profile: ${profileLine(data.profile)}\n\nMedications:\n${medList}` },
+        ],
+      },
+      { kind: "summarize_meds", input: medList },
+    );
     const text = json.choices?.[0]?.message?.content ?? "No summary generated.";
     return { text: text + DISCLAIMER };
   });
@@ -180,20 +210,16 @@ export const adviseMeds = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const medList = data.meds.map((m) => `- ${m.name}${m.dosage ? ` ${m.dosage}` : ""}`).join("\n") || "(none)";
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Suggest lifestyle and supplement considerations relevant to the user's medications and profile. Use markdown: brief intro, then a bullet list of `**Suggestion** — one-line rationale`. Max 6 items. Always say to discuss with a pharmacist or clinician.",
-        },
-        {
-          role: "user",
-          content: `Profile: ${profileLine(data.profile)}\n\nMedications:\n${medList}`,
-        },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          { role: "system", content: "Suggest lifestyle and supplement considerations relevant to the user's medications and profile. Use markdown: brief intro, then a bullet list of `**Suggestion** — one-line rationale`. Max 6 items. Always say to discuss with a pharmacist or clinician." },
+          { role: "user", content: `Profile: ${profileLine(data.profile)}\n\nMedications:\n${medList}` },
+        ],
+      },
+      { kind: "advise_meds", input: medList },
+    );
     const text = json.choices?.[0]?.message?.content ?? "No advice generated.";
     return { text: text + DISCLAIMER };
   });
@@ -204,17 +230,16 @@ export const suggestMeds = createServerFn({ method: "POST" })
     z.object({ query: z.string().min(1).max(64) }).parse(input),
   )
   .handler(async ({ data }) => {
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            'Return a JSON array of up to 6 common medication or supplement names that match the user query (generic name preferred). Output ONLY JSON like ["Metformin","Atorvastatin"]. No prose.',
-        },
-        { role: "user", content: data.query },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          { role: "system", content: 'Return a JSON array of up to 6 common medication or supplement names that match the user query (generic name preferred). Output ONLY JSON like ["Metformin","Atorvastatin"]. No prose.' },
+          { role: "user", content: data.query },
+        ],
+      },
+      { kind: "suggest_meds", input: data.query },
+    );
     const raw: string = json.choices?.[0]?.message?.content ?? "[]";
     try {
       const cleaned = raw.replace(/```json|```/g, "").trim();
@@ -254,17 +279,16 @@ export const parseLabFile = createServerFn({ method: "POST" })
     void isPdf;
     let json;
     try {
-      json = await callAI({
-        model: VISION_MODEL,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a precise medical document parser. Output strictly valid JSON, no commentary.",
-          },
-          { role: "user", content: userContent },
-        ],
-      });
+      json = await callAI(
+        {
+          model: VISION_MODEL,
+          messages: [
+            { role: "system", content: "You are a precise medical document parser. Output strictly valid JSON, no commentary." },
+            { role: "user", content: userContent },
+          ],
+        },
+        { kind: "parse_lab_file", input: `mime:${data.mimeType}` },
+      );
     } catch (e) {
       return { results: [], error: e instanceof Error ? e.message : "Parse failed" };
     }
