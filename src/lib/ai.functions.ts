@@ -230,17 +230,16 @@ export const suggestMeds = createServerFn({ method: "POST" })
     z.object({ query: z.string().min(1).max(64) }).parse(input),
   )
   .handler(async ({ data }) => {
-    const json = await callAI({
-      model: TEXT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            'Return a JSON array of up to 6 common medication or supplement names that match the user query (generic name preferred). Output ONLY JSON like ["Metformin","Atorvastatin"]. No prose.',
-        },
-        { role: "user", content: data.query },
-      ],
-    });
+    const json = await callAI(
+      {
+        model: TEXT_MODEL,
+        messages: [
+          { role: "system", content: 'Return a JSON array of up to 6 common medication or supplement names that match the user query (generic name preferred). Output ONLY JSON like ["Metformin","Atorvastatin"]. No prose.' },
+          { role: "user", content: data.query },
+        ],
+      },
+      { kind: "suggest_meds", input: data.query },
+    );
     const raw: string = json.choices?.[0]?.message?.content ?? "[]";
     try {
       const cleaned = raw.replace(/```json|```/g, "").trim();
