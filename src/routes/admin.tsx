@@ -566,5 +566,3 @@ function LogDialog({ log, onClose }: { log: AiLog; onClose: () => void }) {
     </Dialog>
   );
 }
-
-void Plus;
