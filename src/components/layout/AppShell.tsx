@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Leaf, LogOut, Shield, User as UserIcon } from "lucide-react";
+import { LogOut, Shield, User as UserIcon } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,8 @@ import { useAuth, signOut } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyAdminStatus } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/BrandMark";
+import { useCloudSync } from "@/lib/use-cloud-sync";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +31,7 @@ export function AppShell() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const getStatus = useServerFn(getMyAdminStatus);
+  useCloudSync();
 
   const { data: adminStatus } = useQuery({
     queryKey: ["admin-status"],
@@ -62,10 +65,7 @@ export function AppShell() {
       <header className="sticky top-0 z-30 backdrop-blur-md bg-background/80 border-b border-border/60">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 h-16 flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2 group">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Leaf className="h-4 w-4" />
-            </span>
-            <span className="font-serif text-xl tracking-tight">Verdant</span>
+            <BrandMark size={32} showWordmark />
           </Link>
           <nav className="flex items-center gap-1">
             {nav.map((n) => {
@@ -134,12 +134,12 @@ export function AppShell() {
 
       <footer className="mt-24 border-t border-border/60">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-10 text-sm text-muted-foreground space-y-2">
-          <p className="font-medium text-foreground">Verdant Health</p>
+          <p className="font-medium text-foreground">BioBloomai — for every living system</p>
           <p>
             For informational purposes only. Please consult a qualified healthcare
             professional for medical advice.
           </p>
-          <p>Your data is not used to train AI models. Stored privately in your browser.</p>
+          <p>Your data is private and is never used to train AI models.</p>
         </div>
       </footer>
     </div>

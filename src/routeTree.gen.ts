@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MedsRouteImport } from './routes/meds'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LabsRouteImport } from './routes/labs'
@@ -19,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MedsRoute = MedsRouteImport.update({
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/labs': typeof LabsRoute
   '/login': typeof LoginRoute
   '/meds': typeof MedsRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/labs': typeof LabsRoute
   '/login': typeof LoginRoute
   '/meds': typeof MedsRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRoutesById {
@@ -70,14 +78,30 @@ export interface FileRoutesById {
   '/labs': typeof LabsRoute
   '/login': typeof LoginRoute
   '/meds': typeof MedsRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/labs' | '/login' | '/meds' | '/signup'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/labs'
+    | '/login'
+    | '/meds'
+    | '/onboarding'
+    | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/labs' | '/login' | '/meds' | '/signup'
-  id: '__root__' | '/' | '/admin' | '/labs' | '/login' | '/meds' | '/signup'
+  to: '/' | '/admin' | '/labs' | '/login' | '/meds' | '/onboarding' | '/signup'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/labs'
+    | '/login'
+    | '/meds'
+    | '/onboarding'
+    | '/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -86,6 +110,7 @@ export interface RootRouteChildren {
   LabsRoute: typeof LabsRoute
   LoginRoute: typeof LoginRoute
   MedsRoute: typeof MedsRoute
+  OnboardingRoute: typeof OnboardingRoute
   SignupRoute: typeof SignupRoute
 }
 
@@ -96,6 +121,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meds': {
@@ -142,18 +174,9 @@ const rootRouteChildren: RootRouteChildren = {
   LabsRoute: LabsRoute,
   LoginRoute: LoginRoute,
   MedsRoute: MedsRoute,
+  OnboardingRoute: OnboardingRoute,
   SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
