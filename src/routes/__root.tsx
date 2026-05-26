@@ -70,28 +70,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Unified AI-Powered Health Platform For Living Systems" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#4a6741" },
+      { title: "BioBloomai — AI health companion for every living system" },
       {
         name: "description",
         content:
-          "Track lab results and medications, get AI-powered plain-language summaries. Private, no signup required.",
+          "BioBloomai turns lab reports, medications, and your health profile into clear, AI-powered insights. Private. For every living system.",
       },
-      { property: "og:title", content: "Unified AI-Powered Health Platform For Living Systems" },
-      {
-        property: "og:description",
-        content:
-          "AI-powered lab and medication summaries. Private, no signup required.",
-      },
+      { property: "og:title", content: "BioBloomai — AI for life's well-being" },
+      { property: "og:description", content: "Decode labs, manage meds, get personalised AI guidance. Private and friendly." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Unified AI-Powered Health Platform For Living Systems" },
-      { name: "description", content: "Health Companion AI is a secure, AI-powered web app for personalized health insights and management." },
-      { property: "og:description", content: "Health Companion AI is a secure, AI-powered web app for personalized health insights and management." },
-      { name: "twitter:description", content: "Health Companion AI is a secure, AI-powered web app for personalized health insights and management." },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "BioBloomai" },
+      { name: "twitter:description", content: "AI-powered health companion for people, pets, and every living system." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

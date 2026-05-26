@@ -83,7 +83,11 @@ export function AISection({
             <div className="h-3 bg-sage rounded w-2/3" />
           </div>
         )}
-        {content && <Markdown>{content}</Markdown>}
+        {content && (
+          <div className="max-h-80 overflow-y-auto rounded-xl bg-background/40 border border-border/40 p-4 pr-3">
+            <Markdown>{content}</Markdown>
+          </div>
+        )}
         {content && contextHint && (
           <button
             type="button"

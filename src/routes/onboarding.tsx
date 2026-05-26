@@ -153,8 +153,8 @@ function Onboarding() {
   };
 
   const steps = ["Basics", "Conditions", "Family history", "Allergies & diet", "Review"];
-  const next = () => setStep((s) => Math.min(4, (s + 1) as Step));
-  const back = () => setStep((s) => Math.max(0, (s - 1) as Step));
+  const next = () => setStep((s) => (s < 4 ? ((s + 1) as Step) : s));
+  const back = () => setStep((s) => (s > 0 ? ((s - 1) as Step) : s));
 
   return (
     <div className="mx-auto max-w-2xl px-5 sm:px-8 py-10 sm:py-16">
