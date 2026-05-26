@@ -7,7 +7,7 @@ export type LabResult = {
   value: string;
   unit?: string;
   refRange?: string;
-  date: string; // ISO yyyy-mm-dd
+  date: string;
   notes?: string;
   createdAt: number;
 };
@@ -41,19 +41,27 @@ type State = {
   medsSummary?: string;
   medsAdvice?: string;
   signupNudgeDismissed: boolean;
+  syncedUserId?: string;
+
   addLab: (l: Omit<LabResult, "id" | "createdAt">) => void;
   addLabs: (ls: Omit<LabResult, "id" | "createdAt">[]) => void;
   updateLab: (id: string, patch: Partial<LabResult>) => void;
   removeLab: (id: string) => void;
+  setLabs: (labs: LabResult[]) => void;
+
   addMed: (m: Omit<Medication, "id" | "createdAt">) => void;
+  addMeds: (ms: Omit<Medication, "id" | "createdAt">[]) => void;
   updateMed: (id: string, patch: Partial<Medication>) => void;
   removeMed: (id: string) => void;
+  setMeds: (meds: Medication[]) => void;
+
   setProfile: (p: MiniProfile) => void;
   setLabsSummary: (s: string) => void;
   setLabsAdvice: (s: string) => void;
   setMedsSummary: (s: string) => void;
   setMedsAdvice: (s: string) => void;
   dismissSignupNudge: () => void;
+  setSyncedUserId: (id?: string) => void;
 };
 
 const uid = () =>
@@ -68,6 +76,7 @@ export const useHealthStore = create<State>()(
       meds: [],
       profile: {},
       signupNudgeDismissed: false,
+
       addLab: (l) =>
         set((s) => ({ labs: [{ ...l, id: uid(), createdAt: Date.now() }, ...s.labs] })),
       addLabs: (ls) =>
@@ -80,20 +89,32 @@ export const useHealthStore = create<State>()(
       updateLab: (id, patch) =>
         set((s) => ({ labs: s.labs.map((l) => (l.id === id ? { ...l, ...patch } : l)) })),
       removeLab: (id) => set((s) => ({ labs: s.labs.filter((l) => l.id !== id) })),
+      setLabs: (labs) => set({ labs }),
+
       addMed: (m) =>
         set((s) => ({ meds: [{ ...m, id: uid(), createdAt: Date.now() }, ...s.meds] })),
+      addMeds: (ms) =>
+        set((s) => ({
+          meds: [
+            ...ms.map((m) => ({ ...m, id: uid(), createdAt: Date.now() })),
+            ...s.meds,
+          ],
+        })),
       updateMed: (id, patch) =>
         set((s) => ({ meds: s.meds.map((m) => (m.id === id ? { ...m, ...patch } : m)) })),
       removeMed: (id) => set((s) => ({ meds: s.meds.filter((m) => m.id !== id) })),
+      setMeds: (meds) => set({ meds }),
+
       setProfile: (p) => set({ profile: p }),
       setLabsSummary: (s) => set({ labsSummary: s }),
       setLabsAdvice: (s) => set({ labsAdvice: s }),
       setMedsSummary: (s) => set({ medsSummary: s }),
       setMedsAdvice: (s) => set({ medsAdvice: s }),
       dismissSignupNudge: () => set({ signupNudgeDismissed: true }),
+      setSyncedUserId: (id) => set({ syncedUserId: id }),
     }),
     {
-      name: "health-store-v1",
+      name: "biobloom-store-v1",
       storage: createJSONStorage(() =>
         typeof window !== "undefined" ? localStorage : (undefined as unknown as Storage),
       ),
@@ -106,6 +127,7 @@ export const useHealthStore = create<State>()(
         medsSummary: s.medsSummary,
         medsAdvice: s.medsAdvice,
         signupNudgeDismissed: s.signupNudgeDismissed,
+        syncedUserId: s.syncedUserId,
       }),
     },
   ),
