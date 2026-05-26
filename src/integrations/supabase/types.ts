@@ -65,6 +65,141 @@ export type Database = {
         }
         Relationships: []
       }
+      health_profiles: {
+        Row: {
+          age: number | null
+          allergies: string[] | null
+          bmi: number | null
+          conditions: string[] | null
+          created_at: string
+          diet: string[] | null
+          family_history: string[] | null
+          height_cm: number | null
+          lifestyle: string | null
+          notes: string | null
+          onboarded: boolean
+          sex: string | null
+          updated_at: string
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          age?: number | null
+          allergies?: string[] | null
+          bmi?: number | null
+          conditions?: string[] | null
+          created_at?: string
+          diet?: string[] | null
+          family_history?: string[] | null
+          height_cm?: number | null
+          lifestyle?: string | null
+          notes?: string | null
+          onboarded?: boolean
+          sex?: string | null
+          updated_at?: string
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          age?: number | null
+          allergies?: string[] | null
+          bmi?: number | null
+          conditions?: string[] | null
+          created_at?: string
+          diet?: string[] | null
+          family_history?: string[] | null
+          height_cm?: number | null
+          lifestyle?: string | null
+          notes?: string | null
+          onboarded?: boolean
+          sex?: string | null
+          updated_at?: string
+          user_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
+      labs: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          name: string
+          notes: string | null
+          ref_range: string | null
+          unit: string | null
+          updated_at: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          name: string
+          notes?: string | null
+          ref_range?: string | null
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          ref_range?: string | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      medications: {
+        Row: {
+          created_at: string
+          dosage: string | null
+          end_date: string | null
+          frequency: string | null
+          id: string
+          name: string
+          notes: string | null
+          start_date: string | null
+          times_of_day: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dosage?: string | null
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          start_date?: string | null
+          times_of_day?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dosage?: string | null
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          start_date?: string | null
+          times_of_day?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
