@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { logAi } from "./ai-log.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -58,32 +59,32 @@ async function callAI(
 }
 
 const labSchema = z.object({
-  name: z.string(),
-  value: z.string(),
-  unit: z.string().optional(),
-  refRange: z.string().optional(),
-  date: z.string(),
+  name: z.string().min(1).max(200),
+  value: z.string().min(1).max(100),
+  unit: z.string().max(60).optional(),
+  refRange: z.string().max(120).optional(),
+  date: z.string().max(20),
 });
 
 const labsArraySchema = z.array(labSchema);
 
 const medSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  dosage: z.string().optional(),
-  frequency: z.string().optional(),
-  timesOfDay: z.array(z.string()).optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  notes: z.string().optional(),
+  id: z.string().max(80),
+  name: z.string().min(1).max(200),
+  dosage: z.string().max(60).optional(),
+  frequency: z.string().max(120).optional(),
+  timesOfDay: z.array(z.string().max(40)).max(8).optional(),
+  startDate: z.string().max(20).optional(),
+  endDate: z.string().max(20).optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 const profileSchema = z.object({
-  age: z.number().optional(),
+  age: z.number().min(0).max(140).optional(),
   sex: z.enum(["male", "female", "other"]).optional(),
-  weightKg: z.number().optional(),
-  heightCm: z.number().optional(),
-  conditions: z.string().optional(),
+  weightKg: z.number().min(0).max(700).optional(),
+  heightCm: z.number().min(0).max(280).optional(),
+  conditions: z.string().max(2000).optional(),
 });
 
 function profileLine(p?: z.infer<typeof profileSchema>) {
@@ -99,9 +100,10 @@ function profileLine(p?: z.infer<typeof profileSchema>) {
 
 /* ----------------------- summarize labs ----------------------- */
 export const summarizeLabs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
-      labs: z.array(labSchema.extend({ id: z.string() })),
+      labs: z.array(labSchema.extend({ id: z.string().max(80) })).max(200),
       profile: profileSchema.optional(),
     }).parse(input),
   )
@@ -136,9 +138,10 @@ export const summarizeLabs = createServerFn({ method: "POST" })
 
 /* ----------------------- advise labs ----------------------- */
 export const adviseLabs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
-      labs: z.array(labSchema.extend({ id: z.string() })),
+      labs: z.array(labSchema.extend({ id: z.string().max(80) })).max(200),
       profile: profileSchema.optional(),
     }).parse(input),
   )
@@ -169,9 +172,10 @@ export const adviseLabs = createServerFn({ method: "POST" })
 
 /* ----------------------- summarize meds ----------------------- */
 export const summarizeMeds = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
-      meds: z.array(medSchema),
+      meds: z.array(medSchema).max(200),
       profile: profileSchema.optional(),
     }).parse(input),
   )
@@ -202,9 +206,10 @@ export const summarizeMeds = createServerFn({ method: "POST" })
 
 /* ----------------------- advise meds ----------------------- */
 export const adviseMeds = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
-      meds: z.array(medSchema),
+      meds: z.array(medSchema).max(200),
       profile: profileSchema.optional(),
     }).parse(input),
   )
@@ -226,6 +231,7 @@ export const adviseMeds = createServerFn({ method: "POST" })
 
 /* ----------------------- suggest medication names ----------------------- */
 export const suggestMeds = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({ query: z.string().min(1).max(64) }).parse(input),
   )
@@ -255,16 +261,14 @@ export const suggestMeds = createServerFn({ method: "POST" })
 
 /* ----------------------- parse lab file (image/pdf) ----------------------- */
 export const parseLabFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
-      dataUrl: z.string().min(20).max(15_000_000), // base64 data URL
-      mimeType: z.string(),
+      dataUrl: z.string().min(20).max(15_000_000),
+      mimeType: z.string().max(100),
     }).parse(input),
   )
   .handler(async ({ data }) => {
-    const isPdf = data.mimeType === "application/pdf";
-    // Gemini multimodal via OpenAI-compatible: use image_url with a data URL.
-    // PDFs are accepted by Gemini as inline data.
     const userContent: Array<Record<string, unknown>> = [
       {
         type: "text",
@@ -276,7 +280,6 @@ export const parseLabFile = createServerFn({ method: "POST" })
         image_url: { url: data.dataUrl },
       },
     ];
-    void isPdf;
     let json;
     try {
       json = await callAI(
