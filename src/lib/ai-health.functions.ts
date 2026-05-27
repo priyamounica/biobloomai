@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { logAi } from "./ai-log.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -59,6 +60,7 @@ function tryParseJson<T>(raw: string): T | null {
 
 /* --------- Suggest test names (AI) --------- */
 export const suggestLabTests = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ query: z.string().min(1).max(64) }).parse(i))
   .handler(async ({ data }) => {
     const json = await callAI(
@@ -84,6 +86,7 @@ export const suggestLabTests = createServerFn({ method: "POST" })
 
 /* --------- Autofill lab metadata (unit + ref range) --------- */
 export const labMetadata = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ name: z.string().min(2).max(120) }).parse(i))
   .handler(async ({ data }) => {
     const json = await callAI(
@@ -111,6 +114,7 @@ export const labMetadata = createServerFn({ method: "POST" })
 
 /* --------- Autofill medication details from name --------- */
 export const medMetadata = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ name: z.string().min(2).max(120) }).parse(i))
   .handler(async ({ data }) => {
     const json = await callAI(
@@ -153,6 +157,7 @@ const medParseSchema = z.object({
 });
 
 export const parseMedFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
     z
       .object({
@@ -205,6 +210,7 @@ export const parseMedFile = createServerFn({ method: "POST" })
 
 /* --------- Family-history options (AI generated) --------- */
 export const familyHistorySuggestions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .handler(async () => {
     const json = await callAI(
       {
@@ -229,6 +235,7 @@ export const familyHistorySuggestions = createServerFn({ method: "GET" })
 
 /* --------- Chat about labs/meds (user follow-up Q&A) --------- */
 export const healthChat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>
     z
       .object({

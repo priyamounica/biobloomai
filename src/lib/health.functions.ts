@@ -77,7 +77,7 @@ export const updateLab = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), patch: labInput.partial() }).parse(i))
   .handler(async ({ context, data }) => {
-    const { error } = await context.supabase.from("labs").update(data.patch).eq("id", data.id);
+    const { error } = await context.supabase.from("labs").update(data.patch).eq("id", data.id).eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -86,7 +86,7 @@ export const deleteLab = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ context, data }) => {
-    const { error } = await context.supabase.from("labs").delete().eq("id", data.id);
+    const { error } = await context.supabase.from("labs").delete().eq("id", data.id).eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -131,7 +131,7 @@ export const updateMed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), patch: medInput.partial() }).parse(i))
   .handler(async ({ context, data }) => {
-    const { error } = await context.supabase.from("medications").update(data.patch).eq("id", data.id);
+    const { error } = await context.supabase.from("medications").update(data.patch).eq("id", data.id).eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -140,7 +140,7 @@ export const deleteMed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ context, data }) => {
-    const { error } = await context.supabase.from("medications").delete().eq("id", data.id);
+    const { error } = await context.supabase.from("medications").delete().eq("id", data.id).eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
