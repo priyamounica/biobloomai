@@ -1,12 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { X, Shield } from "lucide-react";
 import { useHealthStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
 export function SignupNudge({ visible }: { visible: boolean }) {
   const dismissed = useHealthStore((s) => s.signupNudgeDismissed);
   const dismiss = useHealthStore((s) => s.dismissSignupNudge);
-  if (!visible || dismissed) return null;
+  const { user, loading } = useAuth();
+  // Hide entirely for signed-in users or while auth state is loading
+  if (!visible || dismissed || loading || user) return null;
   return (
     <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/85 text-primary-foreground p-6 shadow-card relative overflow-hidden">
       <button
@@ -23,12 +26,15 @@ export function SignupNudge({ visible }: { visible: boolean }) {
         <div className="flex-1">
           <h3 className="font-serif text-2xl">Save your health timeline</h3>
           <p className="text-primary-foreground/85 mt-1 text-sm max-w-md">
-            Create a free account to keep your labs, meds, and AI summaries across
-            devices — and get smarter recommendations over time.
+            Sign in or create a free account to keep your labs, meds, and AI summaries
+            across devices — and get smarter recommendations over time.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button asChild variant="secondary" className="bg-white text-primary hover:bg-white/90">
               <Link to="/signup">Create free account</Link>
+            </Button>
+            <Button asChild variant="ghost" className="text-primary-foreground hover:bg-white/15">
+              <Link to="/login">Sign in</Link>
             </Button>
             <Button
               variant="ghost"
