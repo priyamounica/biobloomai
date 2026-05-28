@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Loader2, Sparkles, AlertCircle, ChevronDown } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, ChevronDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Markdown } from "./Markdown";
 import { cn } from "@/lib/utils";
+import { downloadMarkdownAsPdf } from "@/lib/pdf";
 
 type Props = {
   title: string;
@@ -14,6 +15,7 @@ type Props = {
   ctaLabel: string;
   contextHint?: string;
   variant?: "primary" | "accent";
+  pdfFilename?: string;
 };
 
 export function AISection({
