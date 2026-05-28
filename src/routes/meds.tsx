@@ -178,11 +178,13 @@ function Section({
   title,
   items,
   onRemove,
+  onEdit,
   active,
 }: {
   title: string;
   items: Medication[];
   onRemove: (id: string) => void;
+  onEdit: (m: Medication) => void;
   active?: boolean;
 }) {
   if (items.length === 0) return null;
