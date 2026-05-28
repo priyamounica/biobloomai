@@ -149,7 +149,27 @@ function LabsPage() {
                           </p>
                         )}
                       </div>
-                      <button
+                      <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <button
+                          onClick={() => {
+                            setEditing(l);
+                            setOpen(true);
+                          }}
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          aria-label="Edit"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => removeLab(l.id)}
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          aria-label="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                         onClick={() => removeLab(l.id)}
                         className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         aria-label="Delete"
