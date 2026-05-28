@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { logAi } from "./ai-log.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -100,7 +99,6 @@ function profileLine(p?: z.infer<typeof profileSchema>) {
 
 /* ----------------------- summarize labs ----------------------- */
 export const summarizeLabs = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
       labs: z.array(labSchema.extend({ id: z.string().max(80) })).max(200),
@@ -138,7 +136,6 @@ export const summarizeLabs = createServerFn({ method: "POST" })
 
 /* ----------------------- advise labs ----------------------- */
 export const adviseLabs = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
       labs: z.array(labSchema.extend({ id: z.string().max(80) })).max(200),
@@ -172,7 +169,6 @@ export const adviseLabs = createServerFn({ method: "POST" })
 
 /* ----------------------- summarize meds ----------------------- */
 export const summarizeMeds = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
       meds: z.array(medSchema).max(200),
@@ -206,7 +202,6 @@ export const summarizeMeds = createServerFn({ method: "POST" })
 
 /* ----------------------- advise meds ----------------------- */
 export const adviseMeds = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
       meds: z.array(medSchema).max(200),
@@ -231,7 +226,6 @@ export const adviseMeds = createServerFn({ method: "POST" })
 
 /* ----------------------- suggest medication names ----------------------- */
 export const suggestMeds = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({ query: z.string().min(1).max(64) }).parse(input),
   )
@@ -261,7 +255,6 @@ export const suggestMeds = createServerFn({ method: "POST" })
 
 /* ----------------------- parse lab file (image/pdf) ----------------------- */
 export const parseLabFile = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
       dataUrl: z.string().min(20).max(15_000_000),
