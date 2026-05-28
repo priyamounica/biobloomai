@@ -28,6 +28,7 @@ export function AISection({
   ctaLabel,
   contextHint,
   variant = "primary",
+  pdfFilename,
 }: Props) {
   const [showCtx, setShowCtx] = useState(false);
   return (
