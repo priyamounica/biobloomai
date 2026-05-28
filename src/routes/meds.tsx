@@ -141,6 +141,7 @@ function MedsPage() {
               error={sumError}
               onGenerate={handleSummarize}
               ctaLabel="Generate summary"
+              pdfFilename="biobloomai-meds-summary.pdf"
               contextHint={`Based on ${meds.length} medication${meds.length === 1 ? "" : "s"} (${active.length} active).`}
             />
             <AISection
@@ -152,6 +153,7 @@ function MedsPage() {
               onGenerate={handleAdvise}
               ctaLabel="Suggest considerations"
               variant="accent"
+              pdfFilename="biobloomai-meds-advice.pdf"
               contextHint="Suggestions are tailored to the medications you've listed."
             />
             <SignupNudge visible={showNudge && (!!medsSummary || !!medsAdvice)} />
@@ -159,7 +161,15 @@ function MedsPage() {
         </>
       )}
 
-      <AddMedSheet open={open} onOpenChange={setOpen} />
+      <AddMedSheet
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) setEditing(null);
+        }}
+        editing={editing}
+      />
+      <UnsavedDataGuard />
     </div>
   );
 }
