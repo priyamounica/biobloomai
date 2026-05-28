@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2, FlaskConical } from "lucide-react";
+import { Plus, Trash2, FlaskConical, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHealthStore, type LabResult } from "@/lib/store";
 import { AddLabSheet } from "@/components/health/AddLabSheet";
 import { AISection } from "@/components/health/AISection";
 import { SignupNudge } from "@/components/health/SignupNudge";
+import { UnsavedDataGuard } from "@/components/health/UnsavedDataGuard";
 import { useServerFn } from "@tanstack/react-start";
 import { summarizeLabs, adviseLabs } from "@/lib/ai.functions";
 
