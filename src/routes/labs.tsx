@@ -170,14 +170,6 @@ function LabsPage() {
                       </div>
                     </div>
                   ))}
-                        onClick={() => removeLab(l.id)}
-                        className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        aria-label="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
                 </div>
               </div>
             ))}
