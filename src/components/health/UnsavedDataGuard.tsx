@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useBlocker } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,11 +14,9 @@ import { useAuth } from "@/lib/auth";
 import { useHealthStore } from "@/lib/store";
 
 /**
- * Warns guest users with unsaved labs/meds before they leave the page,
- * and prompts them to sign in / sign up so their entries are persisted.
- *
+ * Warns guest users with unsaved labs/meds before they leave the page.
  * - Browser refresh / tab close: native beforeunload warning.
- * - In-app navigation: TanStack Router blocker shows a custom dialog.
+ * - In-app link clicks: custom dialog asking them to sign in/up.
  * After sign-in, useCloudSync pushes the local entries to their account.
  */
 export function UnsavedDataGuard() {
@@ -27,54 +25,37 @@ export function UnsavedDataGuard() {
   const meds = useHealthStore((s) => s.meds);
   const hasUnsaved = !user && !loading && (labs.length > 0 || meds.length > 0);
 
-  // Native beforeunload (refresh / close tab)
+  const [open, setOpen] = useState(false);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
   useEffect(() => {
     if (!hasUnsaved) return;
-    const handler = (e: BeforeUnloadEvent) => {
+    const beforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
     };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [hasUnsaved]);
-
-  // In-app navigation blocker
-  const [pendingProceed, setPendingProceed] = useState<(() => void) | null>(null);
-
-  useBlocker({
-    shouldBlockFn: ({ next }) => {
-      if (!hasUnsaved) return false;
-      // allow navigating into the auth pages — those are how they save
-      const path = next.pathname;
-      if (path.startsWith("/login") || path.startsWith("/signup")) return false;
-      return true;
-    },
-    withResolver: false,
-    enableBeforeUnload: false,
-  });
-
-  // Fallback: open dialog whenever blocker fires. Since withResolver:false in the
-  // current router API, we instead show the dialog by intercepting clicks via a
-  // listener. Simpler: keep an open state controlled by a global event.
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!hasUnsaved) return;
     const onClick = (e: MouseEvent) => {
-      const target = (e.target as HTMLElement)?.closest("a");
-      if (!target) return;
-      const href = target.getAttribute("href");
-      if (!href || href.startsWith("http") || href.startsWith("#")) return;
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      const anchor = (e.target as HTMLElement | null)?.closest("a");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:"))
+        return;
+      // allow auth pages (that's how they save)
       if (href.startsWith("/login") || href.startsWith("/signup")) return;
-      // only intercept same-origin internal links
+      // only intercept links that leave the current page
+      if (href === window.location.pathname) return;
       e.preventDefault();
-      setPendingProceed(() => () => {
-        window.location.href = href;
-      });
+      e.stopPropagation();
+      setPendingHref(href);
       setOpen(true);
     };
+    window.addEventListener("beforeunload", beforeUnload);
     document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload);
+      document.removeEventListener("click", onClick, true);
+    };
   }, [hasUnsaved]);
 
   if (!hasUnsaved) return null;
@@ -88,10 +69,10 @@ export function UnsavedDataGuard() {
           </div>
           <DialogTitle className="font-serif text-2xl">Save your entries?</DialogTitle>
           <DialogDescription>
-            You have {labs.length} lab result{labs.length === 1 ? "" : "s"} and {meds.length} medication
-            {meds.length === 1 ? "" : "s"} entered as a guest. They will be lost when you leave.
-            Sign in or create a free account to save them to your profile — we'll automatically add
-            them to your records.
+            You have {labs.length} lab result{labs.length === 1 ? "" : "s"} and {meds.length}{" "}
+            medication{meds.length === 1 ? "" : "s"} entered as a guest. They will be lost when you
+            leave. Sign in or create a free account — we'll automatically save them to your
+            profile.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-2">
@@ -106,7 +87,7 @@ export function UnsavedDataGuard() {
             className="w-full sm:w-auto"
             onClick={() => {
               setOpen(false);
-              pendingProceed?.();
+              if (pendingHref) window.location.href = pendingHref;
             }}
           >
             Leave without saving
