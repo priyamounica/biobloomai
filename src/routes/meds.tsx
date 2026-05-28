@@ -37,6 +37,7 @@ function MedsPage() {
   const setMedsAdvice = useHealthStore((s) => s.setMedsAdvice);
 
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Medication | null>(null);
   const [sumLoading, setSumLoading] = useState(false);
   const [sumError, setSumError] = useState<string | null>(null);
   const [advLoading, setAdvLoading] = useState(false);
