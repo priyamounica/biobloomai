@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2, Pill, Clock } from "lucide-react";
+import { Plus, Trash2, Pill, Clock, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHealthStore, type Medication } from "@/lib/store";
 import { AddMedSheet } from "@/components/health/AddMedSheet";
 import { AISection } from "@/components/health/AISection";
 import { SignupNudge } from "@/components/health/SignupNudge";
+import { UnsavedDataGuard } from "@/components/health/UnsavedDataGuard";
 import { useServerFn } from "@tanstack/react-start";
 import { summarizeMeds, adviseMeds } from "@/lib/ai.functions";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ function MedsPage() {
   const setMedsAdvice = useHealthStore((s) => s.setMedsAdvice);
 
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Medication | null>(null);
   const [sumLoading, setSumLoading] = useState(false);
   const [sumError, setSumError] = useState<string | null>(null);
   const [advLoading, setAdvLoading] = useState(false);
@@ -108,9 +110,26 @@ function MedsPage() {
         </div>
       ) : (
         <>
-          <Section title="Active" items={active} onRemove={removeMed} active />
+          <Section
+            title="Active"
+            items={active}
+            onRemove={removeMed}
+            onEdit={(m) => {
+              setEditing(m);
+              setOpen(true);
+            }}
+            active
+          />
           {inactive.length > 0 && (
-            <Section title="Inactive (past)" items={inactive} onRemove={removeMed} />
+            <Section
+              title="Inactive (past)"
+              items={inactive}
+              onRemove={removeMed}
+              onEdit={(m) => {
+                setEditing(m);
+                setOpen(true);
+              }}
+            />
           )}
 
           <div className="space-y-6 mt-12">
@@ -122,6 +141,7 @@ function MedsPage() {
               error={sumError}
               onGenerate={handleSummarize}
               ctaLabel="Generate summary"
+              pdfFilename="biobloomai-meds-summary.pdf"
               contextHint={`Based on ${meds.length} medication${meds.length === 1 ? "" : "s"} (${active.length} active).`}
             />
             <AISection
@@ -133,6 +153,7 @@ function MedsPage() {
               onGenerate={handleAdvise}
               ctaLabel="Suggest considerations"
               variant="accent"
+              pdfFilename="biobloomai-meds-advice.pdf"
               contextHint="Suggestions are tailored to the medications you've listed."
             />
             <SignupNudge visible={showNudge && (!!medsSummary || !!medsAdvice)} />
@@ -140,7 +161,15 @@ function MedsPage() {
         </>
       )}
 
-      <AddMedSheet open={open} onOpenChange={setOpen} />
+      <AddMedSheet
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) setEditing(null);
+        }}
+        editing={editing}
+      />
+      <UnsavedDataGuard />
     </div>
   );
 }
@@ -149,11 +178,13 @@ function Section({
   title,
   items,
   onRemove,
+  onEdit,
   active,
 }: {
   title: string;
   items: Medication[];
   onRemove: (id: string) => void;
+  onEdit: (m: Medication) => void;
   active?: boolean;
 }) {
   if (items.length === 0) return null;
@@ -206,13 +237,22 @@ function Section({
                   <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{m.notes}</p>
                 )}
               </div>
-              <button
-                onClick={() => onRemove(m.id)}
-                className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                aria-label="Delete"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                <button
+                  onClick={() => onEdit(m)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
+                  aria-label="Edit"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onRemove(m.id)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  aria-label="Delete"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         ))}

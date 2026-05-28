@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Loader2, Sparkles, AlertCircle, ChevronDown } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, ChevronDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Markdown } from "./Markdown";
 import { cn } from "@/lib/utils";
+import { downloadMarkdownAsPdf } from "@/lib/pdf";
 
 type Props = {
   title: string;
@@ -14,6 +15,7 @@ type Props = {
   ctaLabel: string;
   contextHint?: string;
   variant?: "primary" | "accent";
+  pdfFilename?: string;
 };
 
 export function AISection({
@@ -26,6 +28,7 @@ export function AISection({
   ctaLabel,
   contextHint,
   variant = "primary",
+  pdfFilename,
 }: Props) {
   const [showCtx, setShowCtx] = useState(false);
   return (
@@ -86,6 +89,19 @@ export function AISection({
         {content && (
           <div className="max-h-80 overflow-y-auto rounded-xl bg-background/40 border border-border/40 p-4 pr-3">
             <Markdown>{content}</Markdown>
+          </div>
+        )}
+        {content && pdfFilename && (
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                downloadMarkdownAsPdf({ title, markdown: content, filename: pdfFilename })
+              }
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" /> Download PDF
+            </Button>
           </div>
         )}
         {content && contextHint && (
