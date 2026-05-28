@@ -205,7 +205,15 @@ function LabsPage() {
         </>
       )}
 
-      <AddLabSheet open={open} onOpenChange={setOpen} />
+      <AddLabSheet
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) setEditing(null);
+        }}
+        editing={editing}
+      />
+      <UnsavedDataGuard />
     </div>
   );
 }
