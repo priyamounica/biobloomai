@@ -237,13 +237,22 @@ function Section({
                   <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{m.notes}</p>
                 )}
               </div>
-              <button
-                onClick={() => onRemove(m.id)}
-                className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                aria-label="Delete"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                <button
+                  onClick={() => onEdit(m)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
+                  aria-label="Edit"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onRemove(m.id)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  aria-label="Delete"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
