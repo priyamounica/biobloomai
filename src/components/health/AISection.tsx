@@ -91,6 +91,19 @@ export function AISection({
             <Markdown>{content}</Markdown>
           </div>
         )}
+        {content && pdfFilename && (
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                downloadMarkdownAsPdf({ title, markdown: content, filename: pdfFilename })
+              }
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" /> Download PDF
+            </Button>
+          </div>
+        )}
         {content && contextHint && (
           <button
             type="button"
