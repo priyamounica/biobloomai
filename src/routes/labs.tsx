@@ -34,6 +34,7 @@ function LabsPage() {
   const setLabsAdvice = useHealthStore((s) => s.setLabsAdvice);
 
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<LabResult | null>(null);
   const [sumLoading, setSumLoading] = useState(false);
   const [sumError, setSumError] = useState<string | null>(null);
   const [advLoading, setAdvLoading] = useState(false);
