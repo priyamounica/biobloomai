@@ -110,9 +110,26 @@ function MedsPage() {
         </div>
       ) : (
         <>
-          <Section title="Active" items={active} onRemove={removeMed} active />
+          <Section
+            title="Active"
+            items={active}
+            onRemove={removeMed}
+            onEdit={(m) => {
+              setEditing(m);
+              setOpen(true);
+            }}
+            active
+          />
           {inactive.length > 0 && (
-            <Section title="Inactive (past)" items={inactive} onRemove={removeMed} />
+            <Section
+              title="Inactive (past)"
+              items={inactive}
+              onRemove={removeMed}
+              onEdit={(m) => {
+                setEditing(m);
+                setOpen(true);
+              }}
+            />
           )}
 
           <div className="space-y-6 mt-12">
