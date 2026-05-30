@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, FlaskConical, Pill, Sparkles, ShieldCheck, Eye, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/BrandMark";
+import { OnboardingWalkthrough } from "@/components/health/OnboardingWalkthrough";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -62,6 +63,8 @@ function Home() {
           ))}
         </div>
       </section>
+
+      <OnboardingWalkthrough />
 
       <section className="mx-auto max-w-6xl px-5 sm:px-8 pb-20">
         <div className="rounded-2xl bg-sage/60 border border-sage p-6 sm:p-8 flex flex-col sm:flex-row gap-5 items-start">

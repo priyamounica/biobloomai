@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Markdown } from "./Markdown";
 import { cn } from "@/lib/utils";
 import { downloadMarkdownAsPdf } from "@/lib/pdf";
+import { HealthChatSheet } from "./HealthChatSheet";
 
 type Props = {
   title: string;
@@ -16,6 +17,11 @@ type Props = {
   contextHint?: string;
   variant?: "primary" | "accent";
   pdfFilename?: string;
+  chat?: {
+    topic: "labs" | "meds";
+    scope: "summary" | "advice";
+    context: string;
+  };
 };
 
 export function AISection({
@@ -29,6 +35,7 @@ export function AISection({
   contextHint,
   variant = "primary",
   pdfFilename,
+  chat,
 }: Props) {
   const [showCtx, setShowCtx] = useState(false);
   return (
@@ -91,17 +98,27 @@ export function AISection({
             <Markdown>{content}</Markdown>
           </div>
         )}
-        {content && pdfFilename && (
-          <div className="mt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                downloadMarkdownAsPdf({ title, markdown: content, filename: pdfFilename })
-              }
-            >
-              <Download className="h-3.5 w-3.5 mr-1.5" /> Download PDF
-            </Button>
+        {content && (pdfFilename || chat) && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {pdfFilename && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  downloadMarkdownAsPdf({ title, markdown: content, filename: pdfFilename })
+                }
+              >
+                <Download className="h-3.5 w-3.5 mr-1.5" /> Download PDF
+              </Button>
+            )}
+            {chat && (
+              <HealthChatSheet
+                topic={chat.topic}
+                scope={chat.scope}
+                priorContent={content}
+                context={chat.context}
+              />
+            )}
           </div>
         )}
         {content && contextHint && (

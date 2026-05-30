@@ -22,6 +22,7 @@ import {
   getMyAdminStatus,
   listAiLogs,
   listUsers,
+  resetUserPassword,
   setRole,
   updateAiLog,
   updateProfile,
@@ -279,9 +280,11 @@ function EditUserDialog({ user, onClose }: { user: AdminUser; onClose: () => voi
     moderator: user.roles.includes("moderator"),
     user: user.roles.includes("user"),
   });
+  const [newPassword, setNewPassword] = useState("");
 
   const upd = useServerFn(updateProfile);
   const setR = useServerFn(setRole);
+  const resetPw = useServerFn(resetUserPassword);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -295,6 +298,12 @@ function EditUserDialog({ user, onClose }: { user: AdminUser; onClose: () => voi
       }
     },
     onSuccess: () => { toast.success("User updated"); onClose(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const pwMut = useMutation({
+    mutationFn: () => resetPw({ data: { id: user.id, password: newPassword } }),
+    onSuccess: () => { toast.success("Password reset"); setNewPassword(""); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -327,6 +336,27 @@ function EditUserDialog({ user, onClose }: { user: AdminUser; onClose: () => voi
                 </label>
               ))}
             </div>
+          </div>
+          <div className="space-y-2 pt-4 border-t">
+            <Label>Reset password</Label>
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="New password (≥ 8 chars)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                onClick={() => pwMut.mutate()}
+                disabled={pwMut.isPending || newPassword.length < 8}
+              >
+                {pwMut.isPending ? "…" : "Reset"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Sets a new password immediately. Share it securely with the user.
+            </p>
           </div>
         </div>
         <DialogFooter>
