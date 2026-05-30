@@ -142,6 +142,11 @@ function MedsPage() {
               onGenerate={handleSummarize}
               ctaLabel="Generate summary"
               pdfFilename="biobloomai-meds-summary.pdf"
+              chat={{
+                topic: "meds",
+                scope: "summary",
+                context: `User has ${meds.length} medication(s), ${active.length} active.`,
+              }}
               contextHint={`Based on ${meds.length} medication${meds.length === 1 ? "" : "s"} (${active.length} active).`}
             />
             <AISection
@@ -154,6 +159,11 @@ function MedsPage() {
               ctaLabel="Suggest considerations"
               variant="accent"
               pdfFilename="biobloomai-meds-advice.pdf"
+              chat={{
+                topic: "meds",
+                scope: "advice",
+                context: `User has ${meds.length} medication(s), ${active.length} active.`,
+              }}
               contextHint="Suggestions are tailored to the medications you've listed."
             />
             <SignupNudge visible={showNudge && (!!medsSummary || !!medsAdvice)} />
