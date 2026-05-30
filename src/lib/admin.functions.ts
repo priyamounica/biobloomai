@@ -137,6 +137,25 @@ export const createUser = createServerFn({ method: "POST" })
     return { id: created.user.id };
   });
 
+export const resetUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        password: z.string().min(8).max(72),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
+      password: data.password,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 /* ---------- Roles ---------- */
 
 export const setRole = createServerFn({ method: "POST" })
